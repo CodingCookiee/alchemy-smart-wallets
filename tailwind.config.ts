@@ -7,6 +7,7 @@ export default withAccountKitUi({
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{js,ts,jsx,tsx,mdx}", // Add this line to include src directory
   ],
   theme: {
     extend: {
@@ -59,6 +60,9 @@ export default withAccountKitUi({
       },
       backgroundImage: {
         "bg-main": "url('/bg-main.webp')",
+      },
+      boxShadow: {
+        '3xl': '0 35px 60px -12px rgba(0, 0, 0, 0.25)',
       },
     },
   },

@@ -34,6 +34,7 @@ export const config = createConfig(
         //   { type: "passkey" },
         //   { type: "social", authProviderId: "google", mode: "popup" },
         // ],
+
         ...(PROJECT_ID
           ? [
               [
@@ -49,6 +50,7 @@ export const config = createConfig(
           : []),
       ],
       addPasskeyOnSignup: true,
+      showSignInText: true,
     },
   }
 );
