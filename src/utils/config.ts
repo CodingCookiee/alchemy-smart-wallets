@@ -35,7 +35,8 @@ export const config = createConfig(
         //   { type: "social", authProviderId: "google", mode: "popup" },
         // ],
 
-        ...(PROJECT_ID
+        // Only include external wallets if we're in the browser and have PROJECT_ID
+        ...(typeof window !== "undefined" && PROJECT_ID
           ? [
               [
                 {

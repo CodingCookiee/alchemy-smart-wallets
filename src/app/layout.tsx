@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 import { AlchemyProviders } from "@/providers/alchemyProviders";
+import { SmartAccountProvider } from "@/contexts/SmartAccountContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,7 +34,9 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AlchemyProviders initialState={initialState}>{children}</AlchemyProviders>
+        <AlchemyProviders initialState={initialState}>
+          <SmartAccountProvider>{children}</SmartAccountProvider>
+        </AlchemyProviders>
       </body>
     </html>
   );
