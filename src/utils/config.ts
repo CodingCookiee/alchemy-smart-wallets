@@ -1,6 +1,7 @@
 import { createConfig, cookieStorage } from "@account-kit/react";
 import { QueryClient } from "@tanstack/react-query";
-import { arbitrumSepolia, sepolia, alchemy } from "@account-kit/infra";
+import {arbitrumSepolia , alchemy, defineAlchemyChain } from "@account-kit/infra";
+import { sepolia } from "viem/chains";
 
 const API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
 const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID;
@@ -9,33 +10,36 @@ if (!API_KEY) {
   throw new Error("NEXT_PUBLIC_ALCHEMY_API_KEY is required");
 }
 
-if (!PROJECT_ID) {
-  console.warn(
-    "NEXT_PUBLIC_PROJECT_ID is not set - external wallets will be disabled"
-  );
-}
+const alchemySepoliaChain = defineAlchemyChain({
+  chain: sepolia,
+  rpcBaseUrl: "https://eth-sepolia.g.alchemy.com/v2",
+});
 
 export const config = createConfig(
   {
     transport: alchemy({ apiKey: API_KEY }),
-    chain: sepolia,
+    chain: alchemySepoliaChain,
     ssr: true,
     storage: cookieStorage,
     enablePopupOauth: true,
-    sessionConfig: {
-      expirationTime: 1000 * 60 * 60 * 24, // 24 hours
+    // Enable gas sponsorship
+    gasManagerConfig: {
+      policyId: process.env.NEXT_PUBLIC_GAS_POLICY_ID || "",
     },
   },
   {
     auth: {
       sections: [
-        // [{ type: "email" }],
+        // Email login creates smart accounts automatically
+        [{ type: "email" }],
+
+        // // Social login creates smart accounts automatically
         // [
         //   { type: "passkey" },
         //   { type: "social", authProviderId: "google", mode: "popup" },
         // ],
 
-        // Only include external wallets if we're in the browser and have PROJECT_ID
+        // External wallets (EOAs) - these won't get smart account features
         ...(typeof window !== "undefined" && PROJECT_ID
           ? [
               [
@@ -56,11 +60,4 @@ export const config = createConfig(
   }
 );
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000,
-      retry: 1,
-    },
-  },
-});
+export const queryClient = new QueryClient();

@@ -1,110 +1,63 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import {
-  Button,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/common";
-import { cn } from "@/lib/utils";
 import { useAuthModal } from "@account-kit/react";
+import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/common";
 
 export default function LoginCard() {
   const { openAuthModal } = useAuthModal();
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-  const handleLogin = () => {
-    console.log("Login button clicked");
-    setIsLoggingIn(true);
-    try {
-      openAuthModal();
-    } catch (error) {
-      console.error("Error opening auth modal:", error);
-    } finally {
-      // Reset loading state after a delay
-      setTimeout(() => setIsLoggingIn(false), 2000);
-    }
-  };
 
   return (
-    <Card
-      className={cn(
-        "relative w-full max-w-lg mx-auto shadow-2xl border border-gray-200/50",
-        "bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg",
-        "hover:shadow-3xl transition-all duration-300 transform hover:scale-[1.02]",
-        "min-h-[400px]" // Make it bigger
-      )}
-    >
-      <CardHeader className={cn("text-center space-y-6 pb-10 pt-8")}>
-        <CardTitle
-          className={cn(
-            "text-4xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600",
-            "dark:from-white dark:to-gray-300 bg-clip-text text-transparent",
-            "mb-4"
-          )}
-        >
-          Smart Wallets
+    <Card className="w-full max-w-lg mx-auto">
+      <CardHeader className="text-center">
+        <CardTitle className="text-4xl font-bold">
+          Smart Wallets Demo
         </CardTitle>
-        <CardDescription
-          className={cn(
-            "text-lg text-gray-600 dark:text-gray-400 leading-relaxed px-4",
-            "max-w-md mx-auto"
-          )}
-        >
-          Experience seamless onchain UX with smart wallets or connect your existing EOA.
+        <CardDescription className="text-lg">
+          Experience gasless transactions with Account Abstraction
         </CardDescription>
       </CardHeader>
 
-      <CardContent className={cn("space-y-8 pb-10 px-8")}>
+      <CardContent className="space-y-6">
+        {/* Smart Account Benefits */}
+        <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-blue-800 mb-3">
+            🚀 Smart Account Features:
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center space-x-2">
+              <span className="text-green-500">✅</span>
+              <span>Gasless NFT minting</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-green-500">✅</span>
+              <span>Sponsored gas fees</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-green-500">✅</span>
+              <span>Social login (no seed phrases!)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-green-500">✅</span>
+              <span>Account recovery</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Login Button */}
         <Button
           size="lg"
-          onClick={handleLogin}
-          disabled={isLoggingIn}
-          variant="secondary"
-          className={cn(
-            "w-full h-14 text-lg font-semibold",
-            "bg-gradient-to-r from-blue-600 to-blue-800",
-            "hover:from-blue-700 hover:to-blue-900",
-            "border-0 shadow-lg hover:shadow-xl",
-            "text-white transition-all duration-300",
-            "transform hover:scale-[1.02] active:scale-[0.98]",
-            "rounded-xl"
-          )}
+          onClick={() => openAuthModal()}
+          className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-800"
         >
-          {isLoggingIn ? (
-            <>
-              <Loader2 className={cn("animate-spin -ml-1 mr-3 h-6 w-6")} />
-              Connecting...
-            </>
-          ) : (
-            "Login"
-          )}
+          Login for Smart Account
         </Button>
 
-        {/* Info section */}
-        <div className="space-y-4 pt-4">
-          <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-          
-          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-3">
-            <div className="flex items-start space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <div>
-                <p className="font-semibold text-blue-800 dark:text-blue-300">Smart Wallets</p>
-                <p className="text-blue-700 dark:text-blue-400">Gas sponsorship, batching, social login</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-              <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-              <div>
-                <p className="font-semibold text-orange-800 dark:text-orange-300">External EOAs</p>
-                <p className="text-orange-700 dark:text-orange-400">Connect MetaMask, Coinbase Wallet, etc.</p>
-              </div>
-            </div>
+        {/* Info about external wallets */}
+        <div className="border-t pt-4">
+          <div className="bg-orange-50 p-3 rounded-lg">
+            <p className="text-sm text-orange-800">
+              <strong>Note:</strong> External wallets (MetaMask, etc.) connect as regular EOAs without smart account features.
+            </p>
           </div>
         </div>
       </CardContent>
