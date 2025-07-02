@@ -24,6 +24,7 @@ import Link from "next/link";
 import { useSmartAccountClient } from "@account-kit/react";
 import { useReadNFTData } from "@/hooks/useReadNFTData";
 import { useMint } from "@/hooks/useMintNFT";
+import { useGrantRoles } from "@/hooks/useGrantRoles";
 import { NFT_CONTRACT_ADDRESS, NFT_METADATA } from "@/constants/constants";
 import ContractDebug from "@/components/ui/client/contract-debug";
 
@@ -36,6 +37,7 @@ export default function NftMintCard() {
 
   const { client } = useSmartAccountClient({ type: "LightAccount" });
   const smartAccountAddress = client?.getAddress();
+  const { grantMinterRole, isGrantingRoles } = useGrantRoles();
 
   console.log("🔍 NftMintCard - client:", !!client);
   console.log("🔍 NftMintCard - smartAccountAddress:", smartAccountAddress);
@@ -294,6 +296,25 @@ export default function NftMintCard() {
         )}
 
         <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center">
+          {error && error.includes("need minting permissions") && (
+            <Button
+              className="w-full sm:w-auto gap-2 relative overflow-hidden group mb-2"
+              size="lg"
+              variant="outline"
+              onClick={() => smartAccountAddress && grantMinterRole(smartAccountAddress)}
+              disabled={isGrantingRoles}
+            >
+              <span className="flex items-center gap-2">
+                {isGrantingRoles ? (
+                  <Loader2 className="h-[18px] w-[18px] animate-spin" />
+                ) : (
+                  <PlusCircle className="h-[18px] w-[18px]" />
+                )}
+                Grant Minting Permission
+              </span>
+            </Button>
+          )}
+          
           <Button
             className="w-full sm:w-auto gap-2 relative overflow-hidden group"
             size="lg"

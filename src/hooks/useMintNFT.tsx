@@ -8,8 +8,15 @@ import { sepolia } from "viem/chains";
 import {
   NFT_MINTABLE_ABI_PARSED,
   NFT_CONTRACT_ADDRESS,
-
 } from "@/constants/constants";
+
+const ERROR_MESSAGES = {
+  USER_REJECTED: "Transaction was rejected by user",
+  INSUFFICIENT_FUNDS: "Insufficient funds for transaction",
+  NETWORK_ERROR: "Network error occurred, please try again",
+  EXECUTION_REVERTED: "Transaction failed during execution",
+  NO_SMART_ACCOUNT: "No smart account connected",
+};
 
 export interface UseMintNFTParams {
   onSuccess?: () => void;
@@ -111,33 +118,101 @@ export const useMint = ({ onSuccess }: UseMintNFTParams): UseMintReturn => {
     throw new Error("No working NFT contract found");
   }, []);
 
+  // Function to check and potentially grant minting roles
+  const checkAndGrantRoles = useCallback(async (contractAddress: string, clientAddress: string) => {
+    try {
+      // Check if user already has minting roles
+      const currentRoles = await publicClient.readContract({
+        address: contractAddress as `0x${string}`,
+        abi: NFT_MINTABLE_ABI_PARSED,
+        functionName: "rolesOf",
+        args: [clientAddress],
+      });
+
+      console.log(`🔍 Current roles for ${clientAddress}:`, currentRoles);
+
+      // If no roles (0n), try to grant MINTER_ROLE (typically role 1 = 2^0)
+      if (currentRoles === 0n) {
+        console.log("🔧 Attempting to grant MINTER_ROLE...");
+        
+        // Check if the current account is the owner or has admin roles
+        const ownerAddress = await publicClient.readContract({
+          address: contractAddress as `0x${string}`,
+          abi: NFT_MINTABLE_ABI_PARSED,
+          functionName: "owner",
+        });
+
+        console.log(`📋 Contract owner: ${ownerAddress}`);
+        console.log(`📋 Your address: ${clientAddress}`);
+
+        if (ownerAddress.toLowerCase() === clientAddress.toLowerCase()) {
+          console.log("✅ You are the owner! Attempting to grant MINTER_ROLE to yourself...");
+          
+          // MINTER_ROLE is typically 1 (2^0)
+          const MINTER_ROLE = 1n;
+          
+          // This would need to be called via sendUserOperation
+          throw new Error("🔧 As the contract owner, you need to grant yourself MINTER_ROLE. Please use the thirdweb dashboard or call grantRoles function.");
+        } else {
+          throw new Error(`❌ You need minting permissions. Contract owner (${ownerAddress}) must grant MINTER_ROLE to your smart account (${clientAddress}).`);
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.log("❌ Error checking roles:", error);
+      // Re-throw the error to show user what they need to do
+      throw error;
+    }
+  }, []);
+
   // Function to detect which mint function is available
   const detectMintFunction = useCallback(async (contractAddress: string, clientAddress: string) => {
-    for (const config of MINT_FUNCTION_CONFIGS) {
+    // First check roles
+    await checkAndGrantRoles(contractAddress, clientAddress);
+
+    const mintFunctions = [
+      // Try simple mint without baseURI - thirdweb often allows this
+      { 
+        name: "mint", 
+        args: [
+          clientAddress, // to address
+          1, // amount (quantity to mint)
+          "", // empty baseURI - let contract handle it
+          "0x" // empty data bytes
+        ] 
+      },
+    ];
+    
+    for (const config of mintFunctions) {
       try {
-        console.log(`🔍 Trying function: ${config.name} - ${config.description}`);
-        
-        const args = config.args(clientAddress);
+        console.log(`🔍 Trying function: ${config.name} with args:`, config.args);
         
         // Try to simulate the call first
         await publicClient.simulateContract({
           address: contractAddress as `0x${string}`,
           abi: NFT_MINTABLE_ABI_PARSED,
           functionName: config.name as any,
-          args: args as any,
+          args: config.args as any,
           account: clientAddress as `0x${string}`,
+          value: 0n, // No payment required for mint
         });
         
         console.log(`✅ Function ${config.name} is available`);
-        return { name: config.name, args };
+        return { name: config.name, args: config.args };
       } catch (error) {
         console.log(`❌ Function ${config.name} failed:`, error);
+        
+        // If unauthorized, provide helpful error message
+        if (error?.message?.includes("0x00000000") || error?.message?.includes("Unauthorized")) {
+          throw new Error("❌ Unauthorized to mint. The contract owner needs to grant minting permissions to your smart account address: " + clientAddress);
+        }
         continue;
       }
     }
     
     throw new Error("No compatible mint function found on this contract");
-  }, []);
+  }, [checkAndGrantRoles]);
 
   const handleMint = useCallback(async () => {
     if (!client) {
